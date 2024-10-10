@@ -27,8 +27,10 @@ contract TestSetup is Test {
         vm.deal(robyn, 100 ether);
 
         vm.startPrank(owner);
-        tokenization1155Contract = new Tokenization1155("BaseURI");
+        tokenization1155Contract = new Tokenization1155(10_000, "BaseURI");
         coreContract = new Core(address(tokenization1155Contract));
+
+        tokenization1155Contract.updateCoreContractAddress(address(coreContract));
 
         vm.stopPrank();
     }

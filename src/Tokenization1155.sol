@@ -2,36 +2,30 @@
 pragma solidity >=0.8.25;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Tokenization1155 is ERC1155Supply, Ownable {
+contract Tokenization1155 is ERC1155, Ownable {
 
-    uint256 public commodityId;
+    uint256 public goldNftId = 1;
+    uint256 public constant TOKENS_PER_OUNCE = 100;
+    uint256 public maxNumberOfTokensAvailable;
+    uint256 public numberOfTokensSold;
     address public coreContractAddress;
 
-    mapping(uint256 commodityId => uint256 maxSupply) public commodityMaxSupply;
-
-    event NewCommodityAdded(uint256 indexed commodityId, uint256 maxSupply);
-    event ExistingCommodityMaxSupplyUpdated(uint256 indexed commodityId, uint256 maxSupply);
+    event UpdatedGoldSupply(uint256 maxSupply);
     event CoreContractAddressUpdated(address indexed coreContractAddress);
     
-    constructor(string memory _uri) ERC1155(_uri) Ownable(msg.sender) {}
-
-    function addNewCommodity(uint256 _maxSupply) public onlyOwner {
-        commodityMaxSupply[commodityId] = _maxSupply;
-        emit NewCommodityAdded(commodityId, _maxSupply);
-
-        commodityId++;
+    constructor(uint256 _initialAmountOfOunces, string memory _uri) ERC1155(_uri) Ownable(msg.sender) {
+        maxNumberOfTokensAvailable = _initialAmountOfOunces * TOKENS_PER_OUNCE;
     }
 
-    function updateExistingCommoditiesMaxSupply(uint256 _commodityId, uint256 _maxSupply) public onlyOwner {
-        require(_commodityId < commodityId, "Tokenization1155: Commodity Does Not Exist");
-        require(_maxSupply > commodityMaxSupply[_commodityId], "Tokenization1155: Max Supply To Low");
+    function updateGoldSupply(uint256 _newNumberOfOuncesAvailable) public onlyOwner {
+        uint256 numberOfTokens = _newNumberOfOuncesAvailable * TOKENS_PER_OUNCE;
+        require(numberOfTokensSold < numberOfTokens, "Tokenization1155: New Supply To Low");
 
-        commodityMaxSupply[_commodityId] = _maxSupply;
+        maxNumberOfTokensAvailable = numberOfTokens;
 
-        emit ExistingCommodityMaxSupplyUpdated(_commodityId, _maxSupply);
+        emit UpdatedGoldSupply(numberOfTokens);
     }
 
     function updateCoreContractAddress(address _coreContractAddress) public onlyOwner {
@@ -41,13 +35,12 @@ contract Tokenization1155 is ERC1155Supply, Ownable {
         emit CoreContractAddressUpdated(_coreContractAddress);
     }
 
-
-    function mint(uint256 _commodityId, address _to, uint256 _amount) public {
+    function mint(address _to, uint256 _amount) public {
         require(msg.sender == coreContractAddress, "Tokenization1155: Only Core Contract Can Mint Tokens");
         require(
-            totalSupply(_commodityId) + _amount <= commodityMaxSupply[_commodityId], "Tokenization1155: Max Supply Reached"
+            numberOfTokensSold + _amount <= maxNumberOfTokensAvailable, "Tokenization1155: Max Supply Reached"
         );
 
-        _mint(_to, _commodityId, _amount, "");
+        _mint(_to, goldNftId, _amount, "");
     }
 }
