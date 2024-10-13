@@ -11,13 +11,19 @@ contract CoreConstructorTests is TestSetup {
     function test_FailsIfERC1155AddressIsZeroAddress() public {
         vm.startPrank(owner);
         vm.expectRevert("Core: ERC1155 Cannot Be Address Zero");
-        Core coreContractTwo = new Core(address(0), mainnetGoldAggregator);
+        Core coreContractTwo = new Core(address(0), mainnetGoldAggregator, mainnetUsdc);
     }
 
     function test_FailsIfGoldPriceFeedAddressIsZeroAddress() public {
         vm.startPrank(owner);
         vm.expectRevert("Core: Aggregator Cannot Be Address Zero");
-        Core coreContractTwo = new Core(address(tokenization1155Contract), address(0));
+        Core coreContractTwo = new Core(address(tokenization1155Contract), address(0), mainnetUsdc);
+    }
+
+    function test_FailsIfUsdcAddressIsZeroAddress() public {
+        vm.startPrank(owner);
+        vm.expectRevert("Core: USDC Cannot Be Address Zero");
+        Core coreContractTwo = new Core(address(tokenization1155Contract), mainnetGoldAggregator, address(0));
     }
 
     function test_InitializesVariablesCorrectly() public {

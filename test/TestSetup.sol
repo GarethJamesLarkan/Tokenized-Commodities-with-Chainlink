@@ -17,8 +17,10 @@ contract TestSetup is Test {
     address alice = vm.addr(2);
     address bob = vm.addr(3);
     address robyn = vm.addr(4);
+    address usdcWhale = 0x37305B1cD40574E4C5Ce33f8e8306Be057fD7341;
 
     address public mainnetGoldAggregator = 0x214eD9Da11D2fbe465a6fc601a91E62EbEc1a0D6;
+    address public mainnetUsdc = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48; 
 
     error OwnableUnauthorizedAccount(address account);
     
@@ -32,7 +34,7 @@ contract TestSetup is Test {
 
         vm.startPrank(owner);
         tokenization1155Contract = new Tokenization1155(10_000, "BaseURI");
-        coreContract = new Core(address(tokenization1155Contract), mainnetGoldAggregator);
+        coreContract = new Core(address(tokenization1155Contract), mainnetGoldAggregator, mainnetUsdc);
         goldPriceFeed = AggregatorV3Interface(mainnetGoldAggregator);
 
         tokenization1155Contract.updateCoreContractAddress(address(coreContract));

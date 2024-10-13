@@ -13,22 +13,27 @@ contract PurchaseTests is TestSetup {
     function test_FailsIfIncorrectFundsSentIn() public {
         vm.prank(alice);
         vm.expectRevert("Core: Incorrect Funds");
-        coreContract.purchase{value: 0.1 ether}(10);
+        coreContract.purchase(10);
     }
 
     function test_Purchase() public {
-        uint256 aliceBalance = alice.balance;
-        assertEq(tokenization1155Contract.balanceOf(alice, 1), 0);
+        uint256 usdcWhaleBalance = IERC20(mainnetUsdc).balanceOf(usdcWhale);
+        assertEq(tokenization1155Contract.balanceOf(usdcWhale, 1), 0);
 
         (, int256 answer,,,) = goldPriceFeed.latestRoundData();
-        uint256 amountToPay = (uint256(answer) * 10) / tokenization1155Contract.TOKENS_PER_OUNCE();
+        uint256 amountToPayInUsdc = uint256(answer) / 100;
+        uint256 amountToPayTotal = (amountToPayInUsdc * 10) / tokenization1155Contract.TOKENS_PER_OUNCE();
 
-        vm.startPrank(alice);
+        console.log("Chainlink Gold price: ", uint256(answer));
+        console.log("Amount to pay in USDC: ", amountToPayInUsdc);
+
+        vm.startPrank(usdcWhale);
+        IERC20(mainnetUsdc).approve(address(coreContract), amountToPayTotal);
         vm.expectEmit(true, true, false, false);
-        emit GoldPurchased(alice, 10);
-        coreContract.purchase{value: amountToPay}(10);
+        emit GoldPurchased(usdcWhale, 10);
+        coreContract.purchase(10);
 
-        assertEq(tokenization1155Contract.balanceOf(alice, 1), 10);
-        assertEq(alice.balance, aliceBalance - amountToPay);
+        assertEq(tokenization1155Contract.balanceOf(usdcWhale, 1), 10);
+        assertEq(IERC20(mainnetUsdc).balanceOf(usdcWhale), usdcWhaleBalance - amountToPayTotal);
     }
 }
