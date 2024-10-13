@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.25;
+pragma solidity 0.8.25;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@chainlink/src/interfaces/feeds/AggregatorV3Interface.sol";
@@ -7,18 +7,28 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./Tokenization1155.sol";
 
+/**
+ * @title Core
+ * @dev Core contract for the Gold Purchase Platform
+ * @notice Allow sellers to list gold and sell it to users
+ * Currently only allows purchasing but no listing, still to be built
+ */
 contract Core is Ownable {
     using SafeERC20 for IERC20;
 
+    uint256 public constant USDC_OFFSET = 100;
+    uint256 public platformFee;
+    uint256 public platformFeesForWithdrawal;
+    
     Tokenization1155 public erc1155;
     AggregatorV3Interface public goldPriceFeed;
     IERC20 public USDC;
-    uint256 public constant USDC_OFFSET = 100;
-    uint256 public platformFee;
 
     event GoldPurchased(address indexed buyer, uint256 numberOfTokens);
     event PlatformFeeChanged(uint256 newFee);
-    
+    event PlatformFeesWithdrawn(uint256 amountWithdrawn);
+    event PurchaseFundsWithdrawn(uint256 amountWithdrawn);
+
     constructor(
         uint256 _platformFee,
         address _tokenization1155ContractAddress, 
@@ -51,5 +61,22 @@ contract Core is Ownable {
         platformFee = _platformFee;
 
         emit PlatformFeeChanged(_platformFee);
+    }
+
+    function withdrawalPlatformFees() public {
+        require(platformFeesForWithdrawal > 0, "Core: No Fees To Withdraw");
+        uint256 amountToWithdraw = platformFeesForWithdrawal;
+        platformFeesForWithdrawal = 0;
+
+        USDC.safeTransfer(owner(), amountToWithdraw);
+
+        emit PlatformFeesWithdrawn(amountToWithdraw);
+    }
+
+    function withdrawalPurchaseFunds() public onlyOwner {
+        uint256 amountToWithdraw = USDC.balanceOf(address(this)) - platformFeesForWithdrawal;
+        USDC.safeTransfer(owner(), amountToWithdraw);
+
+        emit PurchaseFundsWithdrawn(amountToWithdraw);
     }
 }
