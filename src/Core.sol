@@ -13,6 +13,7 @@ contract Core is Ownable {
     Tokenization1155 public erc1155;
     AggregatorV3Interface public goldPriceFeed;
     IERC20 public USDC;
+    uint256 public constant USDC_OFFSET = 100;
 
     event GoldPurchased(address indexed buyer, uint256 numberOfTokens);
     
@@ -27,7 +28,7 @@ contract Core is Ownable {
     
     function purchase(uint256 _numberOfTokens) external {
         (, int256 answer,,,) = goldPriceFeed.latestRoundData();
-        uint256 amountToPayInUsdc = uint256(answer) / 100;
+        uint256 amountToPayInUsdc = uint256(answer) / USDC_OFFSET;
         uint256 amountToPayTotal = (amountToPayInUsdc * _numberOfTokens) / erc1155.TOKENS_PER_OUNCE();
 
         USDC.safeTransferFrom(msg.sender, address(this), amountToPayTotal);
