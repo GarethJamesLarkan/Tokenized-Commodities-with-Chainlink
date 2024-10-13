@@ -14,13 +14,22 @@ contract Core is Ownable {
     AggregatorV3Interface public goldPriceFeed;
     IERC20 public USDC;
     uint256 public constant USDC_OFFSET = 100;
+    uint256 public platformFee;
 
     event GoldPurchased(address indexed buyer, uint256 numberOfTokens);
+    event PlatformFeeChanged(uint256 newFee);
     
-    constructor(address _tokenization1155ContractAddress, address _chainlinkAggregator, address _usdc) Ownable(msg.sender) {
+    constructor(
+        uint256 _platformFee,
+        address _tokenization1155ContractAddress, 
+        address _chainlinkAggregator, 
+        address _usdc
+    ) Ownable(msg.sender) {
+        require(_platformFee <= 10_000, "Core: Platform Fee Too Large");
         require(_tokenization1155ContractAddress != address(0), "Core: ERC1155 Cannot Be Address Zero");
         require(_chainlinkAggregator != address(0), "Core: Aggregator Cannot Be Address Zero");
         require(_usdc != address(0), "Core: USDC Cannot Be Address Zero");
+        platformFee = _platformFee;
         erc1155 = Tokenization1155(_tokenization1155ContractAddress);
         goldPriceFeed = AggregatorV3Interface(_chainlinkAggregator);
         USDC = IERC20(_usdc);
@@ -35,5 +44,12 @@ contract Core is Ownable {
         erc1155.mint(msg.sender, _numberOfTokens);
 
         emit GoldPurchased(msg.sender, _numberOfTokens);
+    }
+
+    function setPlatformFee(uint256 _platformFee) external onlyOwner {
+        require(_platformFee <= 10_000, "Core: Platform Fee Too Large");
+        platformFee = _platformFee;
+
+        emit PlatformFeeChanged(_platformFee);
     }
 }

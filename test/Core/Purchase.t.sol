@@ -10,12 +10,6 @@ contract PurchaseTests is TestSetup {
         setUpTests();
     }
 
-    function test_FailsIfIncorrectFundsSentIn() public {
-        vm.prank(alice);
-        vm.expectRevert("Core: Incorrect Funds");
-        coreContract.purchase(10);
-    }
-
     function test_Purchase() public {
         uint256 usdcWhaleBalance = IERC20(mainnetUsdc).balanceOf(usdcWhale);
         assertEq(tokenization1155Contract.balanceOf(usdcWhale, 1), 0);

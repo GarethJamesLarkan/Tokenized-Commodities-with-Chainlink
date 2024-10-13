@@ -34,7 +34,7 @@ contract TestSetup is Test {
 
         vm.startPrank(owner);
         tokenization1155Contract = new Tokenization1155(10_000, "BaseURI");
-        coreContract = new Core(address(tokenization1155Contract), mainnetGoldAggregator, mainnetUsdc);
+        coreContract = new Core(2_000, address(tokenization1155Contract), mainnetGoldAggregator, mainnetUsdc);
         goldPriceFeed = AggregatorV3Interface(mainnetGoldAggregator);
 
         tokenization1155Contract.updateCoreContractAddress(address(coreContract));
